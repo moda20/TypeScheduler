@@ -1,21 +1,21 @@
-# Scheduler Starter
+# TypeScheduler
 
-> A starter template for testing, education, development, and experimentation with the Scheduler.
+> A starter template for testing, education, development, and experimentation with TypeScheduler.
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)
 ![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)
 ![License](https://img.shields.io/badge/License-ISC-green.svg)
 
-📚 **Full Documentation**: [Scheduler Docs](https://scheduler-docs-xi.vercel.app/)
+📚 **Full Documentation**: [TypeScheduler Docs](https://scheduler-docs-xi.vercel.app/)
 > The documentation below provides a quick overview of the starter template. For comprehensive documentation, visit the official docs site.
 
 ---
 
-## 🎯 What is Scheduler?
+## 🎯 What is TypeScheduler?
 
-Scheduler is a task manager that lets you write your own tasks in TypeScript/JavaScript. Based on a typed class component, users can write custom processes using any packages, libraries, and tools they want—all while scheduling these tasks to run at specific times.
+TypeScheduler is a task manager that lets you write your own tasks in TypeScript/JavaScript. Based on a typed class component, users can write custom processes using any packages, libraries, and tools they want—all while scheduling these tasks to run at specific times.
 
-> **In a nutshell**: Scheduler is a powerful, feature-rich CRON job manager.
+> **In a nutshell**: TypeScheduler is a powerful, feature-rich CRON job manager.
 
 ## ✨ Features
 
@@ -52,7 +52,7 @@ docker-compose up -d
 
 ## 📋 Prerequisites & Services
 
-The starter template uses Docker Compose to launch the "Scheduler Stack"—a combination of services that handle all available features. Not all services are mandatory.
+The starter template uses Docker Compose to launch the "TypeScheduler Stack"—a combination of services that handle all available features. Not all services are mandatory.
 
 ### Services Overview
 
@@ -70,7 +70,7 @@ The starter template uses Docker Compose to launch the "Scheduler Stack"—a com
 
 ### Setting Up the Database
 
-The scheduler uses MySQL and requires **2 databases to be created before running the backend**:
+TypeScheduler uses MySQL and requires **2 databases to be created before running the backend**:
 
 ```sql
 CREATE DATABASE scheduler_db;    -- For job definitions and stats, this is the default name and can be changed in the .env file
@@ -195,7 +195,7 @@ class ExampleJob extends JobConsumer {
 export default new ExampleJob();
 ```
 
-### Adding Tasks to Scheduler
+### Adding Tasks to TypeScheduler
 
 You can add tasks via the API, but it's much easier through the UI:
 1. Click `+ New Job` on the main jobs list
@@ -242,7 +242,7 @@ Contributions are welcome! I ([@moda20](https://github.com/moda20)) review all P
 - Testing steps and results
 - Any relevant screenshots or logs
 
-This applies to all Scheduler services (backend & frontend) as well.
+This applies to all TypeScheduler services (backend & frontend) as well.
 
 ---
 
