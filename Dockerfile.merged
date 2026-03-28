@@ -1,0 +1,107 @@
+# ============================================
+# STAGE 1: Build Frontend (React/Vite)
+# ============================================
+FROM node:18 AS frontend-build
+
+# Install git
+RUN apt update && apt install -y git ca-certificates
+
+WORKDIR /app
+
+# Clone frontend repository
+ARG FRONTEND_REPO=https://github.com/moda20/TypeSchedulerUI.git
+ARG FRONTEND_BRANCH=main
+RUN git clone --branch ${FRONTEND_BRANCH} ${FRONTEND_REPO} .
+
+# Install dependencies
+RUN npm config set maxsockets=5
+RUN npm i --no-package-lock
+
+# Build frontend
+RUN npm run build
+
+# ============================================
+# STAGE 2: Build Backend (Bun + TypeScript)
+# ============================================
+FROM oven/bun:1 AS backend-base
+WORKDIR /usr/src/app
+
+# Clone backend repository
+ARG BACKEND_REPO=https://github.com/moda20/TypeSchedulerBackend.git
+ARG BACKEND_BRANCH=main
+RUN apt update && apt install -y git ca-certificates
+RUN git clone --branch ${BACKEND_BRANCH} ${BACKEND_REPO} .
+
+# Install dependencies
+FROM backend-base AS backend-install
+RUN mkdir -p /temp/dev
+RUN cp package.json bun.lock /temp/dev/
+RUN cd /temp/dev && bun install --frozen-lockfile
+
+RUN mkdir -p /temp/prod
+RUN cp package.json bun.lock /temp/prod/
+RUN cd /temp/prod && bun install --frozen-lockfile --production
+
+# Build backend (for testing and validation only)
+FROM backend-base AS backend-build
+COPY --from=backend-install /temp/dev/node_modules node_modules
+ENV NODE_ENV=development
+RUN bun run build
+
+# Prepare production backend && types compilation
+FROM backend-base AS backend-prod
+COPY --from=backend-install /temp/prod/node_modules node_modules
+COPY --from=backend-build /usr/src/app/. .
+COPY --from=backend-build /usr/src/app/package.json .
+RUN apt update && apt install -y ca-certificates
+RUN bun install -g typescript
+RUN bun install bun-types
+RUN bun run build:types
+
+# ============================================
+# STAGE 3: Final Runtime (Bun + Nginx)
+# ============================================
+FROM oven/bun:1 AS final
+
+# Install nginx and bash for running both services
+RUN apt update && \
+    apt install -y nginx bash ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Setup working directory
+WORKDIR /usr/src/app
+
+# Copy backend from Stage 2
+COPY --from=backend-prod /usr/src/app/node_modules node_modules
+COPY --from=backend-prod /usr/src/app/. .
+
+# Copy the UI artifacts to the designated nginx folder
+COPY --from=frontend-build /app/dist/. /usr/share/nginx/html/.
+
+# Removing default nginx config that will override the UI config from the next step
+RUN rm /etc/nginx/sites-enabled/default
+
+# Create and copy nginx config
+COPY --from=frontend-build /app/nginx/nginx.conf /etc/nginx/conf.d/default.conf.template
+ARG SERVER_ENDPOINT=http://localhost:8080
+ENV SERVER_ENDPOINT=$SERVER_ENDPOINT
+RUN sed -i "s@\$SERVER_ENDPOINT@${SERVER_ENDPOINT}@g" /etc/nginx/conf.d/default.conf.template
+RUN mv /etc/nginx/conf.d/default.conf.template /etc/nginx/conf.d/default.conf
+
+# Expose ports
+EXPOSE 80 8080
+
+# Create startup script to run both services
+RUN echo '#!/bin/bash\n\
+# Start nginx in background\n\
+nginx -g "daemon off;" &\n\
+\n\
+# Wait for nginx to start\n\
+sleep 2\n\
+\n\
+# Start bun backend in foreground\n\
+bun run src/index.ts --verbose-error-trace' > /start.sh && \
+    chmod +x /start.sh
+
+# Start both services
+CMD ["/bin/bash", "/start.sh"]

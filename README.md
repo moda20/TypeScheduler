@@ -1,4 +1,11 @@
+<div align="center">
+
 # TypeScheduler
+
+<img src=".github/assets/images/TypeSchedulerLogo.png" alt="Type Scheduler UI Logo" width="200" />
+
+
+</div>
 
 > A starter template for testing, education, development, and experimentation with TypeScheduler.
 
@@ -47,6 +54,33 @@ docker-compose up -d
 ```
 
 > The UI will be available at `http://localhost:9002` (updatable in the compose file)
+
+
+
+## Merged deployment (backend server + frontend web ui): 
+
+Other than the compose file used in the quickstart steps above, a single container service is possible that combines the UI and backend, 
+this is useful if you have no need to keep track of the latest releases in both projects separately, or you are not going to modify the 
+container image parameters. 
+
+The single container deployment uses the `[Dockerfile.merged](Dockerfile.merged)` dockerfile and the [docker-compose.merged.yml](docker-compose.merged.yml) for your compose config.
+The types generation command are still the same except for the image name, if you are going to build the image locally change the name to the name seen in your 
+terminal windows. the default name should be `scheduler_app:latest`
+
+```bash
+# 1. Pull the latest Docker image using the merged dockerfile (or ignore this step if you are building it locally)
+docker-compose -f docker-compose.merged.yml pull
+
+# 2. Copy the auto-generated TypeScript types from the backend image
+docker create --name=scc_b ghcr.io/moda20/scheduler_app:latest && \
+docker cp scc_b:/usr/src/app/extraTypes/types.d.ts ./types.d.ts && \
+docker container rm scc_b
+
+# the types.d.ts file copied will have all the types needed to code your job and when using the injected features like logging and notifications, an example job show how is it used
+
+# 3. Start the stack
+docker-compose -f docker-compose.merged.yml up -d
+```
 
 ---
 
@@ -257,3 +291,5 @@ ISC License - see [LICENSE](LICENSE) for details
 - 📖 [Full Documentation](https://scheduler-docs-xi.vercel.app/)
 - 🐛 [Backend Repository](https://github.com/moda20/scheduler_backend)
 - 👤 [Author](https://github.com/moda20)
+
+

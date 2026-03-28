@@ -1,0 +1,30 @@
+services:
+  ### The other containers are still needed for this deployment, only the backend and frontend scheduler components are in the following container
+  scheduler_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.merged
+      args:
+        - FRONTEND_BRANCH=dev
+        - BACKEND_BRANCH=dev
+      platforms:
+        - linux/amd64
+        - linux/arm64
+    image: scheduler_app:latest
+    container_name: scheduler_full_app
+    restart: always
+    env_file:
+      - .env.target
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    environment:
+      - SERVER_ENDPOINT=http://localhost:8080
+
+    volumes:
+      - ./:/usr/src/app/src/jobs
+      - ./logs:/usr/src/app/src/logs/
+      - ./outputs:/usr/src/app/src/outputs/
+    ports:
+      - "9909:80" # Frontend port
+      - "9910:8080" # Backend port
+
